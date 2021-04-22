@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         // printf("> {rank=%2d, phase=%d} > val_before = %.1f\n", cart_rank, i, val.area);
         // printf("> {rank=%2d} > before barrier\n", cart_rank);
         
-        oddEvenSort(&val, cart_rank, next, prev, dir, dim[0], num_of_cuboids, MPI_CUBOID_TYPE, comm, i, 0);
+        oddEvenSort(&val, cart_rank, next, prev, dir, dim[0], num_of_cuboids, MPI_CUBOID_TYPE, comm);
         MPI_Barrier(comm);
         
         // printf("> {rank=%2d} > after barrier\n", cart_rank);

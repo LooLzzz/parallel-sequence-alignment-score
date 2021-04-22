@@ -8,7 +8,7 @@
             "args": [
                 // "${file}",
                 "-o",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
                 "${fileDirname}/*.c",
                 "-I${fileDirname}",
                 "-lm",
@@ -33,7 +33,7 @@
             "args": [
                 "-np",
                 "${input:np}",
-                "${fileDirname}/${fileBasenameNoExtension}",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
                 "${fileDirname}/${input:fileArg}", // ! ARG IS A FILE !
                 // "${input:args}",
             ],
