@@ -33,10 +33,10 @@ typedef struct CUBOID
 #define min(a,b)        (a.area == b.area ? min_width(a,b) : min_area(a,b) )
 #define minmax(a,b,dir) (dir ? max(a,b) : min(a,b))
 
-void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, int num_of_cuboids, MPI_Datatype val_mpi_type, MPI_Comm comm);
+void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, int num_of_cuboids, int row_wise, MPI_Datatype val_mpi_type, MPI_Comm comm);
 // CUBOID minmax(CUBOID a, CUBOID b, DIR dir);
 
-void print_arr(CUBOID arr[], int len);
+void print_arr(CUBOID arr[], int len, int newline);
 void print_float_arr(float arr[], int len);
 void get_cubes_from_file(char *file_path, int num_of_processes, int *num_of_cubiods, DIR *dir, CUBOID **cuboids);
 MPI_Datatype COMMIT_MPI_CUBOID_TYPE();

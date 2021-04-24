@@ -1,25 +1,22 @@
 #include "utils.h"
 
-void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, int num_of_cuboids, MPI_Datatype val_mpi_type, MPI_Comm comm)
+void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, int num_of_cuboids, int row_wise, MPI_Datatype val_mpi_type, MPI_Comm comm)
 {
-    int last, i;
+    // int last;
+    int i;
     CUBOID a, b;
     MPI_Status status;
 
-    last = num_of_cuboids - 1;
+    // last = num_of_cuboids - 1;
     a = *val;
 
-    // // DEBUG
-    // if (pivot == 15)
-    //     printf("> {rank=%2d, phase=%d} > {next=%2d, prev=%2d}\n", pivot, j, next, prev);
+    // DEBUG
+    // if (j==1 && (pivot==0 || pivot==4 || pivot==8 || pivot==12))
+    //     printf("> {rank=%2d, phase=%d} > before > val = %.2f\n", pivot, j, a.area);
 
     for (i = 0; i < len; i++)
     {
-        // //DEBUG
-        // if (debug)
-        //     printf("> {rank=%2d, phase=%d, i=%d} > start > my_val = (%2d: %.1f x %.1f x %.1f => %.1f)\n", pivot, j, i, a.id, a.w, a.h, a.d, a.area);
-
-        if (pivot % 2 == 0)
+        if ((row_wise==1 && pivot%2 == 0) || (row_wise==0 && (pivot/len)%2 == 0))
         {
             if (i % 2 == 0)
             {
@@ -27,7 +24,7 @@ void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, i
                 MPI_Recv(&b, 1, val_mpi_type, next, 0, comm, &status);
                 a = minmax(a, b, dir);
             }
-            else if (pivot != 0 && pivot != last)
+            else if ((row_wise==1 && pivot%len != 0 && pivot%len != len-1) || (row_wise==0 && pivot>=len && pivot<num_of_cuboids-len))
             {
                 MPI_Send(&a, 1, val_mpi_type, prev, 0, comm);
                 MPI_Recv(&b, 1, val_mpi_type, prev, 0, comm, &status);
@@ -42,30 +39,26 @@ void oddEvenSort(CUBOID *val, int pivot, int next, int prev, DIR dir, int len, i
                 MPI_Recv(&b, 1, val_mpi_type, prev, 0, comm, &status);
                 a = minmax(a, b, !dir);
             }
-            else if (pivot != 0 && pivot != last)
+            else if ((row_wise==1 && pivot%len != 0 && pivot%len != len-1) || (row_wise==0 && pivot>=len && pivot<num_of_cuboids-len))
             {
                 MPI_Send(&a, 1, val_mpi_type, next, 0, comm);
                 MPI_Recv(&b, 1, val_mpi_type, next, 0, comm, &status);
                 a = minmax(a, b, dir);
             }
         }
-
-        // //DEBUG
-        // if (debug)
-        //     printf("> {rank=%2d, phase=%d, i=%d} >  end  > my_val = (%2d: %.1f x %.1f x %.1f => %.1f)\n", pivot, j, i, a.id, a.w, a.h, a.d);
     }
 
     *val = a;
     // return a;
 }
 
-void print_arr(CUBOID arr[], int len)
+void print_arr(CUBOID arr[], int len, int newline)
 {
-    int s = sqrt(len);
+    // int s = sqrt(len);
     for (int i = 0; i < len; i++)
     {
         printf("%-5.1f  ", arr[i].area);
-        if ((i+1)%s==0)
+        if ((i+1)%newline==0)
             printf("\n");
     }
 }
