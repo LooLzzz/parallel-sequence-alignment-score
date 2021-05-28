@@ -41,11 +41,33 @@ int main(int argc, char *argv[])
 
     if (rank == 0)
     {
-        // read array values from 'input.dat'
+        // root
+        
+        // read values from 'input.dat'
         readFloatArr("input.dat", &arr, &arrSize);
-        n = arrSize / 2;
+        n = arrSize - (arrSize / 2);
+        // printFloatArr(arr, arrSize);
+        
+        // send arrSize, let worker know allocate space for the arr
+        MPI_Send(&arrSize, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD);
+        
+        // send A[n:]
+        MPI_Send(arr+(arrSize/2), n, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD);
     }
-    // printFloatArr(arr, arrSize);
+    else
+    {
+        //worker
+
+        // recv arrSize from root
+        MPI_Recv(&arrSize, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+        n = arrSize - (arrSize / 2);
+        
+        // realloc to fit the incoming A[n:]
+        arr = (float *) realloc(arr, sizeof(float) * n);
+
+        // recv A[n:]
+        MPI_Recv(arr, arrSize-n, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    }
 
 
     /**
