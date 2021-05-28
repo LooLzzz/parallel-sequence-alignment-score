@@ -39,9 +39,12 @@ int main(int argc, char *argv[])
     // }
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    // read array values from 'input.dat'
-    readFloatArr("input.dat", &arr, &arrSize);
-    n = arrSize / 2;
+    if (rank == 0)
+    {
+        // read array values from 'input.dat'
+        readFloatArr("input.dat", &arr, &arrSize);
+        n = arrSize / 2;
+    }
     // printFloatArr(arr, arrSize);
 
 
@@ -56,8 +59,11 @@ int main(int argc, char *argv[])
     
     // send `A[:n]` using mpi
 
+    // sendWithMpi(n) // the other proccess should know `n` as well
+    // sendWithMpi(A[n:])
+
     // b1 = cpuCompute(A[:n/2]);
-    // b2 = gpuCompute(A[n/2:]);
+    // b2 = gpuCompute(A[n/2:n]);
     // b3 = from mpi
     // b4 = from mpi
     
