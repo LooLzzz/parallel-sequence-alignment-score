@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "*.lex": "lex",
+        "*.js": "javascript",
+        "*.h": "c",
+        "*.c": "c",
+        "cstdlib": "c",
+        "new": "c",
+        "type_traits": "c",
+        "*.tcc": "c",
+        "random": "c",
+        "numeric": "c",
+        "array": "c",
+        "utility": "c",
+        "algorithm": "c"
+    }
+}

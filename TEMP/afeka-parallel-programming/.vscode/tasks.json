@@ -1,0 +1,84 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "mpicc build active file",
+            "command": "mpicc",
+            "args": [
+                // "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
+                "${fileDirname}/*.c",
+                "-I${fileDirname}",
+                "-lm",
+                "-g",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+
+        {
+            "type": "shell",
+            "label": "mpicc run active file",
+            "command": "mpiexec",
+            "args": [
+                "-np",
+                "${input:np}",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
+                "${fileDirname}/${input:fileArg}", // ! ARG IS A FILE !
+                // "${input:args}",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+        },
+
+        {
+            "type": "shell",
+            "label": "mpicc build&run active file",
+            "dependsOn": [
+                // "delete obj files",
+                "mpicc build active file",
+                "mpicc run active file"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "panel": "shared",
+                "reveal": "always",
+                "focus": true,
+            },
+        },
+    ],
+    "inputs": [
+        {
+            "id": "np",
+            "description": "Choose number of processes",
+            "default": "1",
+            "type": "promptString"
+        },
+        {
+            "id": "fileArg",
+            "description": "Enter file name",
+            "default": "",
+            "type": "promptString",
+        },
+        {
+            "id": "args",
+            "description": "Enter run arguments",
+            "default": "",
+            "type": "promptString",
+        },
+    ],
+}

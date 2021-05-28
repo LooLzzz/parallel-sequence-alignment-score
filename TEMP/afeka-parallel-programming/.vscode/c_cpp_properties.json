@@ -4,9 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/mpich/include/*",
-                "/usr/include/mpi/*",
-                "/usr/local/cuda/include/*"
+                "/usr/lib/x86_64-linux-gnu/mpich/include/*"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/mpicc",
