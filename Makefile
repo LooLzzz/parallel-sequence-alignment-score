@@ -1,7 +1,7 @@
 # MAKEFILE
 
 # objects = main.o cFunctions.o cudaFunctions.o
-objects = main.o
+objects = main.o utils.o
 target = mpiCudaOpenMP
 
 gccFlags = -g
@@ -14,13 +14,17 @@ NP = 1
 build: $(objects)
 	mpicxx -fopenmp $(gccFlags) -o $(target) $(objects) $(buildIncludes) -ldl -lrt
 
-main.o:
-	mpicxx -fopenmp $(gccFlags) -c main.c -o main.o
+# all `*.o` files are made from their corresponding `*.c` and `*.h`
+%.o: %.c %.h
+	mpicxx -fopenmp $(gccFlags) -c $*.c -o $*.o
 
-# cFunctions.o:
+# main.o: main.c main.h
+# 	mpicxx -fopenmp $(gccFlags) -c main.c -o main.o
+
+# cFunctions.o: cFunctions.c cFunctions.h
 # 	mpicxx -fopenmp $(gccFlags) -c cFunctions.c -o cFunctions.o
 
-# cudaFunctions.o:
+# cudaFunctions.o: cudaFunctions.cu cudaFunctions.h
 # 	nvcc $(nvccFlags) $(gccFlags) -c cudaFunctions.cu -o cudaFunctions.o
 
 

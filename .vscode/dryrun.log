@@ -1,6 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/home/linuxu/Desktop/HW3'
-mpicxx -fopenmp -g -c main.c -o main.o
-mpicxx -fopenmp -g -o mpiCudaOpemMP main.o /usr/local/cuda-9.1/lib64/libcudart_static.a -ldl -lrt
-make: Leaving directory '/home/linuxu/Desktop/HW3'
- 

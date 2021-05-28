@@ -1,7 +1,5 @@
 #include "main.h"
 
-#define LINE_MAX 255
-
 /**
  * float A[N] = { ... }
  * float B[N] = { _empty }
@@ -11,6 +9,7 @@
  *     B[i] = max( b(i) )
  */
 
+// global variables
 int numOfProcesses;
 int rank;
 
@@ -24,6 +23,7 @@ int main(int argc, char *argv[])
     }
 
     // init values
+    int n;
     int MAX_K = atoi(argv[1]);
     int arrSize = 0;
     float *arr = NULL;
@@ -41,9 +41,27 @@ int main(int argc, char *argv[])
 
     // read array values from 'input.dat'
     readFloatArr("input.dat", &arr, &arrSize);
+    n = arrSize / 2;
     // printFloatArr(arr, arrSize);
 
 
+    /**
+     * n = N//2
+     * `A[n:]` should be sent to another proccess using mpi
+     * 
+     * each half in each proccess should preform the following:
+     * a[:n/2] -> compute on cpu
+     * a[n/2:] -> compute on gpu
+     */
+    
+    // send `A[:n]` using mpi
+
+    // b1 = cpuCompute(A[:n/2]);
+    // b2 = gpuCompute(A[n/2:]);
+    // b3 = from mpi
+    // b4 = from mpi
+    
+    // B = concat [b1, b2, b3, b4]
 
 
     MPI_Finalize();
@@ -65,14 +83,4 @@ void readFloatArr(const char *filepath, float *arr[], int *arrSize)
     }
 
     fclose(fp);
-}
-
-void printFloatArr(float *arr, int n)
-{
-    printf("arr[%d] = [ ", n);
-    
-    for (int i = 0; i < n-1; i++)
-        printf("%.2f, ", arr[i]);
-    
-    printf("%.2f ]\n", arr[n-1]);
 }
