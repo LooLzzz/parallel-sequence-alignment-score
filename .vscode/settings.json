@@ -5,6 +5,9 @@
         "*.c": "c",
         "*.cu": "cpp",
         "*.cuh": "cpp",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "array": "cpp",
+        "bitset": "cpp",
+        "utility": "cpp"
     },
 }

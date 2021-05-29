@@ -1,38 +1,37 @@
 # MAKEFILE
 
-# objects = main.o cFunctions.o cudaFunctions.o
-objects = main.o utils.o
+objects = main.o utils.o cudaFunctions.cuo
 target = mpiCudaOpenMP
 
-gccFlags = -g
-nvccFlags = -I../inc
+gccFlags = -g -Wno-write-strings -Werror -lm
+nvccFlags = -I/usr/local/cuda-9.1/include/ -I./include/ -g
 buildIncludes = /usr/local/cuda-9.1/lib64/libcudart_static.a
 
 MAX_K = 5
-NP = 1
+NP = 2
 
 build: $(objects)
 	mpicxx -fopenmp $(gccFlags) -o $(target) $(objects) $(buildIncludes) -ldl -lrt
+
+clean:
+	rm -f *.o *.cuo $(target)
+
+run: runNetwork
+
+
 
 # all `*.o` files are made from their corresponding `*.c` and `*.h`
 %.o: %.c %.h
 	mpicxx -fopenmp $(gccFlags) -c $*.c -o $*.o
 
-# main.o: main.c main.h
-# 	mpicxx -fopenmp $(gccFlags) -c main.c -o main.o
-
-# cFunctions.o: cFunctions.c cFunctions.h
-# 	mpicxx -fopenmp $(gccFlags) -c cFunctions.c -o cFunctions.o
-
-# cudaFunctions.o: cudaFunctions.cu cudaFunctions.h
-# 	nvcc $(nvccFlags) $(gccFlags) -c cudaFunctions.cu -o cudaFunctions.o
+# all `*.cuo` files are made from their corresponding `*.cu` and `*.h`
+%.cuo: %.cu %.h
+	nvcc $(nvccFlags) -c $*.cu -o $*.cuo
 
 
-clean:
-	rm -f *.o $(target)
 
-run:
-	mpiexec -np $(NP) $(target) $(MAX_K)
-
-runOnNetwork:
+runNetwork: build
 	mpiexec -np $(NP) -machinefile mf -map-by node $(target) $(MAX_K)
+
+runLocal: build
+	mpiexec -np $(NP) $(target) $(MAX_K)
