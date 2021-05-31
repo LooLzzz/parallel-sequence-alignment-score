@@ -23,11 +23,12 @@ int main(int argc, char *argv[])
     }
 
     // init values
-    int n;
+    int n, i;
     int K_MAX = atoi(argv[1]);
     float *A = NULL;
     float *B = NULL;
     float *A_cpu, *A_gpu, *B_cpu, *B_gpu;
+    double sum;
     char *workerPrefix;
     MPI_Status status;
 
@@ -44,7 +45,7 @@ int main(int argc, char *argv[])
     // init `A[]`
     if (rank == 0) // root
     {
-        workerPrefix = "> root   > ";
+        workerPrefix = ">  root  > ";
 
         // read values from `input.dat`
         readFloatArr("input.dat", &A, &n);
@@ -106,7 +107,18 @@ int main(int argc, char *argv[])
         // get `B_full[n:]` from worker
         MPI_Recv(B+n, n, MPI_FLOAT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     
-        printFloatArr(B, n*2, workerPrefix, "B_final");
+        printFloatArr(A, n*2, workerPrefix, "A");
+
+        printf("\n");
+        printFloatArr(B, n*2, workerPrefix, "B");
+
+        sum = 0;
+        #pragma omp parallel for reduction(+:sum)
+            for (i = 0; i < n*2; i++)
+                sum += B[i];
+
+        printf("\n");
+        printf("%ssum(B) = %.4f\n", workerPrefix, sum);
     }
     else
     {
