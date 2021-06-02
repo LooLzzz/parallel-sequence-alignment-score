@@ -2,9 +2,11 @@
 
 Written by Noam Levi - 205530611.
 
-* Project already compiled, you may run the project by one the following:
+* The project is already compiled, you may run the project by one the following commands
   1. `make run` or `make runNetwork`  
      Will try to run on the network by looking in the machinefile (`./mf`) for nodes.
+     Make sure to add the correct ip addresses to your machinefile before running.  
+     Both computers should have `mpiCudaOpenMP` executable in the same path.
   2. `make runLocal`  
      Will run locally.
 

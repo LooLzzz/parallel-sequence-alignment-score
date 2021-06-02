@@ -1,2 +1,1 @@
-localhost
-127.0.1.1
+ADD IP ADDRESSES HERE
