@@ -3,7 +3,8 @@
 srcdir = ./src
 bindir = ./bin
 
-objects = main.o utils.o cudaFunctions.cuo
+# objects = main.o utils.o cudaFunctions.cuo
+objects = main.o utils.o
 objectsWithPath = $(foreach obj, $(objects), $(bindir)/$(obj)) # prepend `bindir` to all objects
 
 target = sequenceAlignmentExec
@@ -12,7 +13,6 @@ gccFlags = -g -Wno-write-strings -Werror -lm
 nvccFlags = -I/usr/local/cuda-9.1/include/ -I./include/ -g
 buildIncludes = /usr/local/cuda-9.1/lib64/libcudart_static.a
 
-MAX_K = 5
 NP = 2
 
 build: $(objects)
@@ -38,7 +38,7 @@ run: runNetwork
 
 
 runNetwork: build
-	mpiexec -np $(NP) -machinefile machinefile -map-by node $(target) $(MAX_K)
+	mpiexec -np $(NP) -machinefile machinefile -map-by node $(target)
 
 runLocal: build
-	mpiexec -np $(NP) $(target) $(MAX_K)
+	mpiexec -np $(NP) $(target)
