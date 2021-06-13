@@ -27,11 +27,11 @@ run: runNetwork
 
 
 
-# all `*.o` files are made from their corresponding `*.c` and `*.h`
+# each `*.o` file is made from its corresponding `*.c` and `*.h`
 %.o: $(srcdir)/%.c $(srcdir)/%.h
 	mpicxx -fopenmp $(gccFlags) -c $(srcdir)/$*.c -o $(bindir)/$*.o
 
-# all `*.cuo` files are made from their corresponding `*.cu` and `*.h`
+# each `*.cuo` file is made from its corresponding `*.cu` and `*.h`
 %.cuo: $(srcdir)/%.cu $(srcdir)/%.h
 	nvcc $(nvccFlags) -c $(srcdir)/$*.cu -o $(bindir)/$*.cuo
 
