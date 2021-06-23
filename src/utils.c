@@ -28,3 +28,10 @@ void freeAll(void *a, ...)
 
     va_end(args);
 }
+
+void freeMat(void **mat, int n)
+{
+    while (n--)
+        free(mat[n]);
+    free(mat);
+}
