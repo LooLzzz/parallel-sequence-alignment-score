@@ -24,15 +24,16 @@ typedef enum _DIR
     MAX
 } DIR;
 
-typedef enum _LETTERS
-{
-    G=0, P, A, V, L,
-    I, M, C, F, Y,
-    W, H, K, R, Q,
-    N, E, D, S, T
-} LETTERS;
+// typedef enum _LETTERS
+// {
+//     G=0, P, A, V, L,
+//     I, M, C, F, Y,
+//     W, H, K, R, Q,
+//     N, E, D, S, T
+// } LETTERS;
 
 char AllLetters[] = "GPAVLIMCFYWHKRQNEDST";
+#define LetterToId(ch) strchr(AllLetters, ch) ? (strchr(AllLetters, ch) - AllLetters) : NULL
 
 char ConservativeGroups[CONSERVATIVE_GROUPS_COUNT][5] = {
     "NDEQ", "NEQK", "STA",
@@ -52,6 +53,6 @@ int main(int argc, char *argv[]);
 
 void readInputsFromFile(const char *filepath, float (*W)[W_LEN], char (*seq1)[SEQ1_MAXLEN], char (*seq2)[SEQ2_MAXLEN], DIR *dir);
 void generateMutantGroups(char MutantGroups[LETTER_COUNT][LETTER_COUNT+1]);
-void generateAllMutants(char seq[], int seq_n, int *res_n, char **res);
+void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res);
 
 void cpuCompute();

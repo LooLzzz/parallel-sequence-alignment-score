@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     int num_of_mutants = 0;
     char **seq2_mutants;
 
-    int i, len;
+    int i, worker_mutants_len, len;
     char *seq2_offset;
 
     // init MPI
@@ -46,11 +46,25 @@ int main(int argc, char *argv[])
         MPI_Send(seq1, SEQ1_MAXLEN, MPI_CHAR, 1, 0, MPI_COMM_WORLD); // seq1
         MPI_Send(&dir, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // dir
         MPI_Send(&len, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // strlen(seq2)
-        MPI_Send(seq2_offset, len-(len/2), MPI_CHAR, 1, 0, MPI_COMM_WORLD); // second half of seq2
+        // MPI_Send(seq2_offset, len-(len/2), MPI_CHAR, 1, 0, MPI_COMM_WORLD); // second half of seq2
         
-        generateAllMutants(seq2, len/2, &num_of_mutants, seq2_mutants);
+        generateAllMutants(seq2, len, &num_of_mutants, &seq2_mutants);
 
-        // TODO: recv seq2 mutant results from worker & join both results
+        for (i = 0; i < num_of_mutants; i++)
+            printf("%s\n", seq2_mutants[i]);
+
+        //TODO: generate 2-tuples of {(offset, mutant)} to be sent to workers to calculate scores on
+
+        // MPI_Recv(&worker_mutants_len, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // worker seq2 mutant count
+        // seq2_mutants = (char**) realloc(seq2_mutants, (num_of_mutants+worker_mutants_len)*sizeof(char*));
+        
+        // for (i = num_of_mutants; i < worker_mutants_len; i++)
+        // {
+        //     seq2_mutants[i] = (char*) malloc(len-(len/2) * sizeof(char));
+        //     MPI_Recv(seq2_mutants[i], len-(len/2), MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // the mutants themselves
+        // }
+        
+        // num_of_mutants += worker_mutants_len;
     }
     else // worker
     {
@@ -60,11 +74,13 @@ int main(int argc, char *argv[])
         MPI_Recv(seq1, SEQ1_MAXLEN, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // seq1
         MPI_Recv(&dir, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // dir
         MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // strlen(seq2)
-        MPI_Recv(&seq2, len-(len/2), MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // second half of seq2
+        // MPI_Recv(&seq2, len-(len/2), MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // second half of seq2
         
-        generateAllMutants(seq2, len-(len/2), &num_of_mutants, seq2_mutants);
+        // generateAllMutants(seq2, len-(len/2), &num_of_mutants, &seq2_mutants);
 
-        // TODO: send seq2 mutant results back to root
+        // MPI_Send(&num_of_mutants, 1, MPI_INT, 0, 0, MPI_COMM_WORLD); // worker seq2 mutant count
+        // for (i = 0; i < num_of_mutants; i++)
+        //     MPI_Send(seq2_mutants[i], len-(len/2), MPI_CHAR, 0, 0, MPI_COMM_WORLD); // the mutants themselves
     }
 
     MPI_Finalize();
@@ -150,21 +166,52 @@ void generateMutantGroups(char MutantGroups[LETTER_COUNT][LETTER_COUNT+1])
  * C -> GPAVLIMFYWHKRQNEDST -> 19
  * 
  * total 19+16+15+19 = 69 possible mutant sequences (nice)
+ *
+ * total += 1 (no mutation is also an option) =>
+ * => total = 70 (less nice)
  */
-void generateAllMutants(char seq[], int seq_n, int *res_n, char **res)
+void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res)
 {
-    int i, count = 0;
-    char ch, mutant[SEQ2_MAXLEN];
+    int i, j, k, count = 1;
+    char *loc, **mutants; //mutant[SEQ2_MAXLEN];
+    
     char MutantGroups[LETTER_COUNT][LETTER_COUNT+1] = {0};
     generateMutantGroups(MutantGroups);
 
-    //TODO: enum_id to string
-    //TODO: all this
-    
+    // count how many mutants are needed to be created
     for (i = 0; i < seq_n; i++)
     {
-        ch = seq[i];
+        j = LetterToId(seq[i]);
+        count += strlen(MutantGroups[j]);
     }
+    
+    // first "mutant" is the original seq.
+    mutants = (char**) malloc(count * sizeof(char*));
+    mutants[0] = (char*) calloc(seq_n, sizeof(char));
+    memcpy(mutants[0], seq, seq_n*sizeof(char));
+
+    // the rest of the mutants, the "real" ones
+    k = 1;
+    for (i = 0; i < seq_n; i++)
+    {
+        j = LetterToId(seq[i]);
+        loc = MutantGroups[j]; // iterate over the mutant group and generate mutants
+        while (*loc)
+        {
+            // start from a clean clone of `seq`
+            mutants[k] = (char*) calloc(seq_n, sizeof(char));
+            memcpy(mutants[k], seq, seq_n*sizeof(char));
+            
+            // mutate the `i` letter of the `k` mutant variant
+            mutants[k][i] = *loc;
+
+            k++;
+            loc++;
+        }
+    }
+
+    *res_n = count;
+    *res = mutants;
 }
 
 void cpuCompute()
