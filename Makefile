@@ -23,7 +23,7 @@ clean:
 	rm -f $(bindir)/*.o
 	rm -f $(bindir)/*.cuo
 
-run: runNetwork
+run: runLocal
 
 
 
