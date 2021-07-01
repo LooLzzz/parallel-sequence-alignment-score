@@ -9,6 +9,7 @@
 // #include "cudaFunctions.h"
 
 #define LINE_MAX 255
+#define OUTPUT_FILE "output.txt"
 
 #define SEQ1_MAXLEN 10000
 #define SEQ2_MAXLEN 5000
@@ -32,6 +33,7 @@ typedef struct _TASK
     float weights[W_LEN];
     char signs[SEQ2_MAXLEN];
     float score;
+    DIR dir;
 } TASK;
 
 
@@ -62,10 +64,13 @@ char SemiConservativeGroups[SEMI_CONSERVATIVE_GROUPS_COUNT][7] = {
 
 int main(int argc, char *argv[]);
 
-void readInputsFromFile(const char *filepath, float weights[], char seq1[], char seq2[], DIR *dir);
-// void readInputsFromFile(const char *filepath, float (*W)[W_LEN], char (*seq1)[SEQ1_MAXLEN], char (*seq2)[SEQ2_MAXLEN], DIR *dir);
-void generateMutantGroups(char MutantGroups[][]);
+void readInputsFromFile(const char *filepath, float weights[W_LEN], char seq1[SEQ1_MAXLEN], char seq2[SEQ2_MAXLEN], DIR *dir);
+void generateMutantGroups(char MutantGroups[LETTER_COUNT][LETTER_COUNT+1]);
 void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res);
-void generateTasks(char seq1[], char seq2_mutants[][], int seq2_mutants_count, int weights[], TASK tasks[], int tasks_count);
+void generateTasks(char seq1[SEQ1_MAXLEN], char **seq2_mutants, int seq2_mutants_count, float weights[W_LEN], DIR dir, TASK *tasks, int tasks_count);
+void printTask(TASK task, const char *taskName);
+void printOutput(const char *outfile, TASK task);
 
-void cpuCompute();
+void computeTasks(TASK tasks[], int tasks_count);
+void computeSigns(TASK *task);
+void computeScore(TASK *task);

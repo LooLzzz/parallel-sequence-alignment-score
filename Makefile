@@ -14,6 +14,7 @@ nvccFlags = -I/usr/local/cuda-9.1/include/ -I./include/ -g
 buildIncludes = /usr/local/cuda-9.1/lib64/libcudart_static.a
 
 NP = 2
+INPUT = input.txt
 
 build: $(objects)
 	mpicxx -fopenmp $(gccFlags) -o $(target) $(objectsWithPath) $(buildIncludes) -ldl -lrt
@@ -38,7 +39,7 @@ run: runLocal
 
 
 runNetwork: build
-	mpiexec -np $(NP) -machinefile machinefile -map-by node $(target)
+	mpiexec -np $(NP) -machinefile machinefile -map-by node $(target) $(INPUT)
 
 runLocal: build
-	mpiexec -np $(NP) $(target)
+	mpiexec -np $(NP) $(target) $(INPUT)

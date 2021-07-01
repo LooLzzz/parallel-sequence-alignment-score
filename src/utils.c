@@ -10,21 +10,6 @@ void printFloatArr(float *arr, int n, const char *prefix, const char *arrName)
     printf("%.2f ]\n", arr[n-1]);
 }
 
-void printTask(TASK task, const char *taskName)
-{
-    char prefix_spaces[256] = {0};
-    memset(prefix_spaces, ' ', task.offset);
-
-    printf("%s = {\n", taskName);
-    printf("  seq1       = %s\n", task.seq1);
-    printf("  seq2       = %s%s\n", prefix_spaces, task.seq2);
-    printf("  signs      = %s%s\n", prefix_spaces, task.seq1);
-    printf("  offset     = %d\n", task.offset);
-    printFloatArr(task.weights, 4, "  ", "weights");
-    printf("  score      = %.2f\n", task.score);
-    printf("}\n");
-}
-
 /**
  * Frees all passed variables
  * Last arg should be `NULL`
