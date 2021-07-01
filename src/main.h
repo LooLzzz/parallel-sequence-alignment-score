@@ -24,6 +24,17 @@ typedef enum _DIR
     MAX
 } DIR;
 
+typedef struct _TASK
+{
+    char seq1[SEQ1_MAXLEN];
+    char seq2[SEQ2_MAXLEN];
+    int offset;
+    float weights[W_LEN];
+    char signs[SEQ2_MAXLEN];
+    float score;
+} TASK;
+
+
 // typedef enum _LETTERS
 // {
 //     G=0, P, A, V, L,
@@ -33,7 +44,7 @@ typedef enum _DIR
 // } LETTERS;
 
 char AllLetters[] = "GPAVLIMCFYWHKRQNEDST";
-#define LetterToId(ch) strchr(AllLetters, ch) ? (strchr(AllLetters, ch) - AllLetters) : NULL
+#define LetterToId(ch) strchr(AllLetters, ch) ? (strchr(AllLetters, ch) - AllLetters) : -1
 
 char ConservativeGroups[CONSERVATIVE_GROUPS_COUNT][5] = {
     "NDEQ", "NEQK", "STA",
@@ -51,8 +62,10 @@ char SemiConservativeGroups[SEMI_CONSERVATIVE_GROUPS_COUNT][7] = {
 
 int main(int argc, char *argv[]);
 
-void readInputsFromFile(const char *filepath, float (*W)[W_LEN], char (*seq1)[SEQ1_MAXLEN], char (*seq2)[SEQ2_MAXLEN], DIR *dir);
-void generateMutantGroups(char MutantGroups[LETTER_COUNT][LETTER_COUNT+1]);
+void readInputsFromFile(const char *filepath, float weights[], char seq1[], char seq2[], DIR *dir);
+// void readInputsFromFile(const char *filepath, float (*W)[W_LEN], char (*seq1)[SEQ1_MAXLEN], char (*seq2)[SEQ2_MAXLEN], DIR *dir);
+void generateMutantGroups(char MutantGroups[][]);
 void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res);
+void generateTasks(char seq1[], char seq2_mutants[][], int seq2_mutants_count, int weights[], TASK tasks[], int tasks_count);
 
 void cpuCompute();
