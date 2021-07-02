@@ -129,7 +129,6 @@ void generateMutantGroups(char MutantGroups[LETTER_COUNT][LETTER_COUNT+1])
     int i, j;
     char ch, *loc, *loc2, str[LETTER_COUNT+1];
 
-    #pragma omp parallel for
     for (i = 0; i < LETTER_COUNT; i++)
     {
         // start a new mutant group
