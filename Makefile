@@ -3,8 +3,8 @@
 srcdir = ./src
 bindir = ./bin
 
-# objects = main.o utils.o cudaFunctions.cuo
-objects = main.o utils.o
+objects = main.o utils.o cudaFunctions.cuo
+# objects = main.o utils.o
 objectsWithPath = $(foreach obj, $(objects), $(bindir)/$(obj)) # prepend `bindir` to all objects
 
 target = sequenceAlignmentExec
@@ -32,8 +32,8 @@ run: runLocal
 %.o: $(srcdir)/%.c $(srcdir)/%.h
 	mpicxx -fopenmp $(gccFlags) -c $(srcdir)/$*.c -o $(bindir)/$*.o
 
-# each `*.cuo` file is made from its corresponding `*.cu` and `*.h`
-%.cuo: $(srcdir)/%.cu $(srcdir)/%.h
+# each `*.cuo` file is made from its corresponding `*.cu` and `*.cuh`
+%.cuo: $(srcdir)/%.cu $(srcdir)/%.cuh
 	nvcc $(nvccFlags) -c $(srcdir)/$*.cu -o $(bindir)/$*.cuo
 
 

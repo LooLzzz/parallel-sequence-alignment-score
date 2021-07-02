@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 
 
     // execute tasks
-    computeTasks(tasks, tasks_count);
+    computeTasks(tasks, tasks_count, dir);
 
     best_task = tasks[0];
     for (i = 1; i < tasks_count; i++)
@@ -78,15 +78,9 @@ int main(int argc, char *argv[])
     // root should recv the selected task from worker and determine which task to keep, worker's or itself.
     if (rank == 0) // root
     {
-
         MPI_Recv(&worker_best_task, sizeof(TASK), MPI_CHAR, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // worker's `best_task`
         best_task = task_minmax(best_task, worker_best_task, dir);
 
-        // //DEBUG
-        // computeSigns(&best_task);
-        // computeScore(&best_task);
-        // //DEBUG
-        
         printTask(best_task, "best_task");
         printOutput(OUTPUT_FILE, best_task);
     }
@@ -102,7 +96,7 @@ int main(int argc, char *argv[])
 
 void readInputsFromFile(const char *filepath, float weights[W_LEN], char seq1[SEQ1_MAXLEN], char seq2[SEQ2_MAXLEN], DIR *dir)
 {
-    char line[LINE_MAX];
+    char line[LINE_MAXLEN];
     FILE *fd = fopen(filepath, "r");
 
     fscanf(fd, "%f %f %f %f", weights, weights+1, weights+2, weights+3);
@@ -226,7 +220,7 @@ void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res)
 
 void generateTasks(char seq1[SEQ1_MAXLEN], char **seq2_mutants, int seq2_mutants_count, float weights[W_LEN], DIR dir, TASK *tasks, int tasks_count)
 {
-    char str[LINE_MAX];
+    char str[LINE_MAXLEN];
     int i, j, offset;
     int max_offset = strlen(seq1) - strlen(seq2_mutants[0]) + 1;
 
@@ -249,22 +243,6 @@ void generateTasks(char seq1[SEQ1_MAXLEN], char **seq2_mutants, int seq2_mutants
     }
 }
 
-void printTask(TASK task, const char *taskName)
-{
-    char prefix_spaces[256] = {0};
-    memset(prefix_spaces, ' ', task.offset);
-
-    printf("%s = {\n", taskName);
-    printf("  seq1       = %s\n", task.seq1);
-    printf("  seq2       = %s%s\n", prefix_spaces, task.seq2);
-    printf("  signs      = %s%s\n", prefix_spaces, task.signs);
-    printf("  offset     = %d\n", task.offset);
-    printFloatArr(task.weights, 4, "  ", "weights");
-    printf("  score      = %.2f\n", task.score);
-    printf("  dir        = %s\n", task.dir ? "MAX" : "MIN");
-    printf("}\n");
-}
-
 void printOutput(const char *outfile, TASK task)
 {
     FILE *file = fopen(outfile, "w");
@@ -274,101 +252,4 @@ void printOutput(const char *outfile, TASK task)
     fprintf(file, "offset = %d\n", task.offset);
     
     fclose(file);
-}
-
-void computeTasks(TASK tasks[], int tasks_count)
-{
-    #pragma omp parallel for
-    for (int i = 0; i < tasks_count; i++)
-    {
-        computeSigns(tasks+i);
-        computeScore(tasks+i);
-    }
-}
-
-void computeSigns(TASK *task)
-{
-    char *signs = task->signs;
-    char *seq1 = task->seq1 + task->offset;
-    char *seq2 = task->seq2;
-    int seq2_len = strlen(seq2);
-    int i, j, flag;
-    char *a, *b;
-
-    for (i = 0; i < seq2_len; i++)
-    {
-        // equal
-        if (seq1[i] == seq2[i])
-        {
-            *(signs++) = '*';
-            continue;
-        }
-        
-        // conservative
-        flag = FALSE;
-        for (j = 0; j < CONSERVATIVE_GROUPS_COUNT; j++)
-        {
-            a = strchr(ConservativeGroups[j], seq1[i]);
-            b = strchr(ConservativeGroups[j], seq2[i]);
-            flag = a && b;
-            if (flag)
-                break;
-        }
-        if (flag)
-        {
-            *(signs++) = ':';
-            continue;
-        }
-
-        // semi-conservative
-        flag = FALSE;
-        for (j = 0; j < SEMI_CONSERVATIVE_GROUPS_COUNT; j++)
-        {
-            a = strchr(SemiConservativeGroups[j], seq1[i]);
-            b = strchr(SemiConservativeGroups[j], seq2[i]);
-            flag = a && b;
-            if (flag)
-                break;
-        }
-        if (flag)
-        {
-            *(signs++) = '.';
-            continue;
-        }
-        
-        // none
-        *(signs++) = ' ';
-    }
-}
-
-void computeScore(TASK *task)
-{
-    char *signs = task->signs;
-    float *weights = task->weights;
-    float score = 0;
-
-    while (*signs)
-    {
-        switch (*(signs++))
-        {
-            case '*':
-                score += weights[0];
-                break;
-            
-            case ':':
-                score -= weights[1];
-                break;
-            
-            case '.':
-                score -= weights[2];
-                break;
-            
-            case ' ':
-            default:
-                score -= weights[3];
-                break;
-        }
-    }
-
-    task->score = score;
 }
