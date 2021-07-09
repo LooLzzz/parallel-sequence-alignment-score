@@ -1,6 +1,6 @@
 # Mutant Sequence Alignment Project
 
-Written by Noam Levi - 205530611.
+Written by Noam Levi.
 
 * The project is already compiled, you may run the project by using one the following commands
   1. `make run` or `make runLocal`  
