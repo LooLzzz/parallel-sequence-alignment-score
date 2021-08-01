@@ -36,7 +36,7 @@
 
     typedef struct _TASK
     {
-        char seq1[SEQ1_MAXLEN];
+        char *seq1;
         char seq2[SEQ2_MAXLEN];
         int offset;
         float weights[W_LEN];

@@ -16,14 +16,29 @@ __device__ char *_strchr(const char *str, char ch);
 int computeTasks(TASK *tasks, int tasks_count, DIR dir)
 {
     cudaError_t err;
-    int size, blocksPerGrid;
+    int size, blocksPerGrid, i, seq1_len;
+    char *device_seq1, *host_seq1;
     TASK *device_tasks;
-          
+
+    host_seq1 = tasks[0].seq1;
+    seq1_len = strlen(host_seq1) + 1;
+
+    cudaMalloc((void**) &device_seq1, seq1_len);
+    cudaCheckErr();
+    cudaMemcpy(device_seq1, host_seq1, seq1_len * sizeof(char), cudaMemcpyHostToDevice);
+    cudaCheckErr();
+
+    for (i = 0; i < tasks_count; i++)
+        tasks[i].seq1 = device_seq1; //update pointer to `device_seq1`
+    
     size = tasks_count * sizeof(TASK);
+    printf("tasks_size = %d\n", size);
     cudaMalloc((void**) &device_tasks, size);
     cudaCheckErr();
     cudaMemcpy(device_tasks, tasks, size, cudaMemcpyHostToDevice);
     cudaCheckErr();
+
+    printf("1\n");
 
     blocksPerGrid  = (tasks_count + threadsPerBlock - 1) / threadsPerBlock;
     _compute<<<blocksPerGrid, threadsPerBlock>>>(device_tasks, tasks_count);
@@ -31,6 +46,9 @@ int computeTasks(TASK *tasks, int tasks_count, DIR dir)
     
     cudaMemcpy(tasks, device_tasks, size, cudaMemcpyDeviceToHost);
     cudaCheckErr();
+
+    for (i = 0; i < tasks_count; i++)
+        tasks[i].seq1 = host_seq1; //update pointer back to `host_seq1`
     
     cudaFree(device_tasks);
     cudaCheckErr();
@@ -68,7 +86,7 @@ __device__ void computeSigns(TASK *tasks)
     char *signs = tasks[idx].signs;
     char *seq1 = tasks[idx].seq1 + tasks[idx].offset;
     char *seq2 = tasks[idx].seq2;
-    int seq2_len = _strlen(seq2);    
+    int seq2_len = _strlen(seq2);
     int i, j, flag;
     char *a, *b;
 

@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
 
         generateTasks(seq1, seq2_mutants, seq2_mutants_count, weights, dir, tasks, tasks_count);
 
+        MPI_Send(seq1, SEQ1_MAXLEN, MPI_CHAR, 1, 0, MPI_COMM_WORLD); // seq1
         MPI_Send(&tasks_count, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // tasks_count
         MPI_Send(tasks+(tasks_count/2), (tasks_count-(tasks_count/2)) * sizeof(TASK), MPI_CHAR, 1, 0, MPI_COMM_WORLD); // second half of tasks
         
@@ -61,11 +62,15 @@ int main(int argc, char *argv[])
     {
         MPI_Recv(&dir, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // dir
 
+        MPI_Recv(seq1, SEQ1_MAXLEN, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &status); // seq1
         MPI_Recv(&tasks_count, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // tasks_count
         tasks_count -= tasks_count/2;
         tasks = (TASK*) malloc(tasks_count * sizeof(TASK));
         TestAlloc(tasks);
         MPI_Recv(tasks, tasks_count * sizeof(TASK), MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // second half of tasks
+
+        for (i = 0; i < tasks_count; i++)
+            tasks[i].seq1 = seq1;
     }
 
 
@@ -82,6 +87,8 @@ int main(int argc, char *argv[])
     if (rank == 0) // root
     {
         MPI_Recv(&worker_best_task, sizeof(TASK), MPI_CHAR, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // worker's `best_task`
+        worker_best_task.seq1 = best_task.seq1;
+
         best_task = task_minmax(best_task, worker_best_task, dir);
 
         printTask(best_task, "best_task");
@@ -237,8 +244,8 @@ void generateTasks(char seq1[SEQ1_MAXLEN], char **seq2_mutants, int seq2_mutants
     {
         for (offset = 0; offset < max_offset; offset++)
         {
-            // tasks[i].seq1 = seq1; //copy by reference, seq1 is the same in all tasks
-            strcpy(tasks[j].seq1, seq1);
+            tasks[i].seq1 = seq1; //copy by reference, seq1 is the same in all tasks
+            // strcpy(tasks[j].seq1, seq1);
             strcpy(tasks[j].seq2, seq2_mutants[i]);
             tasks[j].offset = offset;
             memcpy(tasks[j].weights, weights, 4*sizeof(float));
