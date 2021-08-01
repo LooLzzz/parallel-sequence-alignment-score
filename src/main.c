@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
 
 
     // execute tasks
-    computeTasks(tasks, tasks_count, dir);
+    computeTasks(tasks, tasks_count);
+    
 
     best_task = tasks[0];
     for (i = 1; i < tasks_count; i++)
         best_task = task_minmax(best_task, tasks[i], dir);
-
 
     // at this point, both MPI nodes only have one `best_task`
     // root should recv the selected task from worker and determine which task to keep, worker's or itself.

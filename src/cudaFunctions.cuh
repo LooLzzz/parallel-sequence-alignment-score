@@ -15,4 +15,12 @@
                                 exit(EXIT_FAILURE);                                                          \
                             }
 
-int computeTasks(TASK *tasks, int tasks_count, DIR dir);
+typedef struct _GPU_TASK
+{
+    char *seq2;
+    int offset;
+    char *signs;
+    float score;
+} GPU_TASK;
+
+int computeTasks(TASK *tasks, int tasks_count);

@@ -5,58 +5,82 @@
 
 #include "cudaFunctions.cuh"
 
-__global__ void _compute(TASK *tasks, int tasks_count);
-__device__ void computeSigns(TASK *tasks);
-__device__ void computeScore(TASK *tasks);
+void copyTasksToGPU(TASK *tasks, int tasks_count, GPU_TASK **device_tasks);
+__global__ void _compute(GPU_TASK *tasks, int tasks_count);
+__device__ void computeSigns(GPU_TASK *tasks);
+__device__ void computeScore(GPU_TASK *tasks);
 
 __device__ int _strlen(const char *str);
 __device__ char *_strchr(const char *str, char ch);
 
+__device__ char device_seq1[SEQ1_MAXLEN];
+__device__ float device_weights[W_LEN];
+cudaError_t err;
 
-int computeTasks(TASK *tasks, int tasks_count, DIR dir)
+int computeTasks(TASK *tasks, int tasks_count)
 {
-    cudaError_t err;
-    int size, blocksPerGrid, i, seq1_len;
-    char *device_seq1, *host_seq1;
-    TASK *device_tasks;
+    int i, blocksPerGrid, seq2_len;
+    GPU_TASK *device_tasks, t;
 
-    host_seq1 = tasks[0].seq1;
-    seq1_len = strlen(host_seq1) + 1;
+    seq2_len = strlen(tasks->seq2);
+    copyTasksToGPU(tasks, tasks_count, &device_tasks);
 
-    cudaMalloc((void**) &device_seq1, seq1_len);
-    cudaCheckErr();
-    cudaMemcpy(device_seq1, host_seq1, seq1_len * sizeof(char), cudaMemcpyHostToDevice);
-    cudaCheckErr();
-
-    for (i = 0; i < tasks_count; i++)
-        tasks[i].seq1 = device_seq1; //update pointer to `device_seq1`
-    
-    size = tasks_count * sizeof(TASK);
-    printf("tasks_size = %d\n", size);
-    cudaMalloc((void**) &device_tasks, size);
-    cudaCheckErr();
-    cudaMemcpy(device_tasks, tasks, size, cudaMemcpyHostToDevice);
-    cudaCheckErr();
-
-    printf("1\n");
-
-    blocksPerGrid  = (tasks_count + threadsPerBlock - 1) / threadsPerBlock;
+    blocksPerGrid = (tasks_count + threadsPerBlock - 1) / threadsPerBlock;
     _compute<<<blocksPerGrid, threadsPerBlock>>>(device_tasks, tasks_count);
-    cudaCheckErr();
-    
-    cudaMemcpy(tasks, device_tasks, size, cudaMemcpyDeviceToHost);
-    cudaCheckErr();
 
     for (i = 0; i < tasks_count; i++)
-        tasks[i].seq1 = host_seq1; //update pointer back to `host_seq1`
-    
-    cudaFree(device_tasks);
-    cudaCheckErr();
+    {        
+        cudaMemcpy(&t, device_tasks+i, sizeof(GPU_TASK), cudaMemcpyDeviceToHost);
+        cudaCheckErr();
+
+        cudaMemcpy(tasks[i].signs, t.signs, seq2_len * sizeof(char), cudaMemcpyDeviceToHost);
+        cudaCheckErr();
+        
+        tasks[i].score = t.score;
+    }
 
     return CUDA_SUCCESS;
 }
 
-__global__ void _compute(TASK *tasks, int tasks_count)
+void copyTasksToGPU(TASK *tasks, int tasks_count, GPU_TASK **res)
+{
+    int seq2_len = strlen(tasks->seq2);
+    GPU_TASK *device_tasks;
+
+    device_tasks = (GPU_TASK *)malloc(tasks_count * sizeof(GPU_TASK));
+    cudaMalloc(res, tasks_count * sizeof(GPU_TASK));
+    cudaCheckErr();
+
+    // seq1
+    cudaMemcpyToSymbol(device_seq1, tasks[0].seq1, SEQ1_MAXLEN * sizeof(char), 0, cudaMemcpyHostToDevice);
+    cudaCheckErr();
+
+    // weights
+    cudaMemcpyToSymbol(device_weights, tasks[0].weights, W_LEN * sizeof(float), 0, cudaMemcpyHostToDevice);
+    cudaCheckErr();
+
+    for (int i = 0; i < tasks_count; i++)
+    {
+        // offset+score
+        device_tasks[i].offset = tasks[i].offset;
+        device_tasks[i].score = 0;
+        
+        // seq2
+        cudaMalloc(&(device_tasks[i].seq2), seq2_len * sizeof(char));
+        cudaCheckErr();
+        cudaMemcpy(device_tasks[i].seq2, tasks[i].seq2, seq2_len * sizeof(char), cudaMemcpyHostToDevice);
+        cudaCheckErr();
+
+        // signs
+        cudaMalloc(&(device_tasks[i].signs), seq2_len * sizeof(char));
+        cudaCheckErr();
+    }
+
+    cudaMemcpy(*res, device_tasks, tasks_count * sizeof(GPU_TASK), cudaMemcpyHostToDevice);
+    free(device_tasks);
+}
+
+__global__ void _compute(GPU_TASK *tasks, int tasks_count)
 {
     int idx = (blockDim.x * blockIdx.x) + threadIdx.x;
     if (idx > tasks_count-1)
@@ -66,7 +90,7 @@ __global__ void _compute(TASK *tasks, int tasks_count)
     computeScore(tasks);
 }
 
-__device__ void computeSigns(TASK *tasks)
+__device__ void computeSigns(GPU_TASK *tasks)
 {
     int idx = (blockDim.x * blockIdx.x) + threadIdx.x;
     // TASK *task = tasks + i;
@@ -84,7 +108,7 @@ __device__ void computeSigns(TASK *tasks)
     };
 
     char *signs = tasks[idx].signs;
-    char *seq1 = tasks[idx].seq1 + tasks[idx].offset;
+    char *seq1 = device_seq1 + tasks[idx].offset;
     char *seq2 = tasks[idx].seq2;
     int seq2_len = _strlen(seq2);
     int i, j, flag;
@@ -139,12 +163,12 @@ __device__ void computeSigns(TASK *tasks)
     }
 }
 
-__device__ void computeScore(TASK *tasks)
+__device__ void computeScore(GPU_TASK *tasks)
 {
     int idx = (blockDim.x * blockIdx.x) + threadIdx.x;
 
     char *signs = tasks[idx].signs;
-    float *weights = tasks[idx].weights;
+    float *weights = device_weights;
     
     tasks[idx].score = 0;
     while (*signs)
