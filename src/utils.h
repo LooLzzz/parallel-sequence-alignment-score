@@ -22,6 +22,8 @@
 
     #define LetterToId(ch) strchr(AllLetters, ch) ? (strchr(AllLetters, ch) - AllLetters) : -1
 
+    #define TestAlloc(var) if (var == NULL) {printf("error in line %d: cannot allocate\n", __LINE__-1); exit(EXIT_FAILURE);}
+
     #define task_max(a,b) (a.score > b.score) ? a : b
     #define task_min(a,b) (a.score < b.score) ? a : b
     #define task_minmax(a,b,dir) dir ? task_max(a,b) : task_min(a,b)

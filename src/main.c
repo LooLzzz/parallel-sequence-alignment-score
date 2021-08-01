@@ -48,7 +48,8 @@ int main(int argc, char *argv[])
         generateAllMutants(seq2, strlen(seq2), &seq2_mutants_count, &seq2_mutants);
         tasks_count = seq2_mutants_count * (strlen(seq1) - strlen(seq2) + 1);
         tasks = (TASK*) malloc(tasks_count * sizeof(TASK));
-        
+        TestAlloc(tasks);
+
         generateTasks(seq1, seq2_mutants, seq2_mutants_count, weights, dir, tasks, tasks_count);
 
         MPI_Send(&tasks_count, 1, MPI_INT, 1, 0, MPI_COMM_WORLD); // tasks_count
@@ -63,6 +64,7 @@ int main(int argc, char *argv[])
         MPI_Recv(&tasks_count, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // tasks_count
         tasks_count -= tasks_count/2;
         tasks = (TASK*) malloc(tasks_count * sizeof(TASK));
+        TestAlloc(tasks);
         MPI_Recv(tasks, tasks_count * sizeof(TASK), MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status); // second half of tasks
     }
 
@@ -191,7 +193,10 @@ void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res)
     
     // first "mutant" is the original seq.
     mutants = (char**) malloc(count * sizeof(char*));
+    TestAlloc(mutants);
+    
     mutants[0] = (char*) calloc(seq_n, sizeof(char));
+    TestAlloc(mutants[0]);
     memcpy(mutants[0], seq, seq_n*sizeof(char));
 
     // the rest of the mutants, the "real" ones
@@ -204,6 +209,7 @@ void generateAllMutants(char seq[], int seq_n, int *res_n, char ***res)
         {
             // start from a clean clone of `seq`
             mutants[k] = (char*) calloc(seq_n, sizeof(char));
+            TestAlloc(mutants[k]);
             memcpy(mutants[k], seq, seq_n*sizeof(char));
             
             // mutate the `i` letter of the `k` mutant variant
